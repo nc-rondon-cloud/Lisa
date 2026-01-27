@@ -1,0 +1,64 @@
+# LISA Configuration File
+# This is the default template - customize for your project
+
+project:
+  name: "lisa-ml-project"
+  base_dir: "."
+
+paths:
+  # Data directory containing datasets
+  data: "data/"
+
+  # LISA's diary directory (markdown documentation)
+  diary: "lisa/lisas_diary"
+
+  # LISA's laboratory directory (models, plots, artifacts)
+  laboratory: "lisa/lisas_laboratory"
+
+  # MLflow runs directory
+  mlruns: "lisa/mlruns"
+
+mlflow:
+  # MLflow tracking URI
+  tracking_uri: "file:./lisa/mlruns"
+
+  # Experiment name for this project
+  experiment_name: "default-experiment"
+
+stopping_criteria:
+  # Stop when performance threshold is reached
+  performance:
+    enabled: true
+    metric: "f1_score"  # Primary metric to optimize
+    threshold: 0.90     # Target value
+
+  # Stop when improvement rate is too low
+  improvement:
+    enabled: true
+    min_improvement_percent: 1.0  # Minimum % improvement expected
+    window_size: 5                 # Number of experiments to check
+
+  # Stop when performance has converged
+  convergence:
+    enabled: true
+    max_variance: 0.01  # Maximum acceptable variance
+    window_size: 10     # Number of experiments to check
+
+  # Stop when resource limits are reached
+  resources:
+    enabled: true
+    max_experiments: 50    # Maximum number of experiments
+    max_time_hours: 24     # Maximum total time
+
+data_science:
+  # Dataset size threshold for special handling (MB)
+  large_dataset_threshold_mb: 500
+
+  # Chunk size for processing large datasets
+  chunk_size_rows: 10000
+
+  # Maximum features to show in visualizations
+  max_features_for_viz: 20
+
+  # Random seed for reproducibility
+  random_seed: 42

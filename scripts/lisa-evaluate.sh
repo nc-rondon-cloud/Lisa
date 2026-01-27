@@ -1,0 +1,105 @@
+#!/bin/bash
+set -e
+
+# LISA Model Evaluation Script
+# Evaluates trained model and compares with previous experiments
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LISA_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Source library
+source "$SCRIPT_DIR/lisa-lib.sh"
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Parse arguments
+EXPERIMENT_ID="${1:-latest}"
+
+echo -e "${CYAN}📊 LISA Model Evaluation${NC}"
+echo "==========================================="
+echo "Experiment: $EXPERIMENT_ID"
+echo ""
+
+# Activate Python environment
+if [[ -d "$LISA_DIR/.venv-lisa-ml" ]]; then
+    source "$LISA_DIR/.venv-lisa-ml/bin/activate"
+else
+    echo -e "${RED}❌ Python environment not found${NC}"
+    exit 1
+fi
+
+# Load evaluation prompt
+EVAL_PROMPT="$LISA_DIR/prompts/lisa-evaluation-prompt.md"
+
+if [[ ! -f "$EVAL_PROMPT" ]]; then
+    echo -e "${RED}❌ Evaluation prompt not found: $EVAL_PROMPT${NC}"
+    exit 1
+fi
+
+# Build context
+CONTEXT_PROMPT="$(cat <<EOF
+You are LISA performing comprehensive model evaluation.
+
+Experiment ID: $EXPERIMENT_ID
+
+Files to read:
+1. lisa_config.yaml - Configuration (target metrics, paths)
+2. lisa/PRD.md - Project objectives
+3. $EVAL_PROMPT - Evaluation instructions
+
+Your task:
+1. Get the MLflow run ID for experiment $EXPERIMENT_ID
+2. Load the trained model from MLflow
+3. Load test dataset
+4. Generate predictions
+5. Calculate comprehensive metrics (accuracy, f1, precision, recall, ROC-AUC)
+6. Generate detailed classification report
+7. Compare with previous best model
+8. Perform error analysis (which examples misclassified?)
+9. Generate evaluation plots (confusion matrix, etc.)
+10. Make recommendation: DEPLOY | CONTINUE | TRY_DIFFERENT_APPROACH
+11. Document in lisas_diary/
+
+Recommendation logic:
+- If score >= target: DEPLOY
+- If score > previous best and close to target (<5% gap): CONTINUE with fine-tuning
+- If score > previous best: CONTINUE
+- If no improvement: TRY_DIFFERENT_APPROACH
+
+Output: <promise>EVALUATION_COMPLETE:${EXPERIMENT_ID}:{recommendation}:{score}</promise>
+EOF
+)"
+
+echo -e "${CYAN}Evaluating model...${NC}\n"
+
+echo "$CONTEXT_PROMPT" | claude
+
+# Check for completion
+EVAL_ENTRY=$(ls -t "$LISA_DIR/lisas_diary"/evaluation_*.md 2>/dev/null | head -1)
+
+if [[ -f "$EVAL_ENTRY" ]]; then
+    echo -e "\n${GREEN}✓ Evaluation completed${NC}"
+
+    # Extract recommendation
+    if grep -q "DEPLOY" "$EVAL_ENTRY" 2>/dev/null; then
+        echo -e "${GREEN}🎉 Recommendation: DEPLOY - Target achieved!${NC}"
+        exit 0
+    elif grep -q "CONTINUE" "$EVAL_ENTRY" 2>/dev/null; then
+        echo -e "${CYAN}→ Recommendation: CONTINUE experimenting${NC}"
+        exit 0
+    elif grep -q "TRY_DIFFERENT_APPROACH" "$EVAL_ENTRY" 2>/dev/null; then
+        echo -e "${YELLOW}⚠ Recommendation: Try different approach${NC}"
+        exit 0
+    fi
+
+    exit 0
+else
+    echo -e "\n${YELLOW}⚠ Evaluation entry not found${NC}"
+    exit 1
+fi
