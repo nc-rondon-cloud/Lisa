@@ -15,7 +15,7 @@ Just pure, methodical, unstoppable intelligence powered by Claude and elegant ba
 
 This is **LISA (Learning Intelligent Software Agent)** — evolved from the original Ralph Loop, now with dual capabilities: general programming (Code mode) and autonomous data science (ML mode). She keeps sessions fresh, avoids context drift, and can even train ML models while you sleep. Because why pay a senior six figures when Lisa will do it for API credits and a gold star?
 
-![Lisa Simpson, Data Scientist & Software Engineer](lisa.png)
+![Lisa Simpson, Data Scientist & Software Engineer](lisa.jpeg)
 
 ## Prerequisites
 
