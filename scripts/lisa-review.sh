@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-review.sh - Run comprehensive code review on repository
+# lisa-review.sh - Run comprehensive code review on repository
 
 set -e
 
@@ -14,9 +14,9 @@ cd "$PROJECT_ROOT"
 export LISA_LOG_DIR="$SCRIPT_DIR/logs"
 export LISA_STATUS_FILE="$SCRIPT_DIR/.lisa-status.json"
 
-# Source the ralph library for logging
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source the lisa library for logging
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
     lisa_info "Starting code review..."
 fi
 
@@ -26,7 +26,7 @@ staged_files=$(git diff --name-only --cached 2>/dev/null || echo "")
 
 if [[ -z "$modified_files" && -z "$staged_files" ]]; then
     echo "No modified or staged files to review."
-    echo "Tip: Use ralph-review-file.sh to review specific files."
+    echo "Tip: Use lisa-review-file.sh to review specific files."
     exit 0
 fi
 

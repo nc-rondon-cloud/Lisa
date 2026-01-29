@@ -15,7 +15,7 @@ export LISA_STATUS_FILE="$LISA_DIR/.lisa-status.json"
 export LISA_STATE_FILE="$LISA_DIR/.lisa-state.json"
 export LISA_PROMPTS_DIR="$LISA_DIR/prompts"
 
-# Source ralph library for logging
+# Source lisa library for logging
 if [[ -f "$LISA_DIR/scripts/lisa-lib.sh" ]]; then
     source "$LISA_DIR/scripts/lisa-lib.sh"
     lisa_setup_logging

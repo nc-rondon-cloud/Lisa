@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-review-diff.sh - Review git diff changes
+# lisa-review-diff.sh - Review git diff changes
 
 set -e
 
@@ -13,9 +13,9 @@ cd "$PROJECT_ROOT"
 # Set up logging environment
 export LISA_LOG_DIR="$SCRIPT_DIR/logs"
 
-# Source the ralph library for logging
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source the lisa library for logging
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
     lisa_info "Starting code review of git changes..."
 fi
 

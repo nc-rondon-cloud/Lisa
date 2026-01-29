@@ -74,7 +74,7 @@ export LISA_STATE_FILE="$SCRIPT_DIR/.lisa-state.json"
 export LISA_PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
 export LISA_PROMPTS_DIR="$SCRIPT_DIR/prompts"
 
-# Source ralph library for logging
+# Source lisa library for logging
 if [[ -f "$SCRIPT_DIR/scripts/lisa-lib.sh" ]]; then
     source "$SCRIPT_DIR/scripts/lisa-lib.sh"
     lisa_setup_logging
@@ -250,7 +250,7 @@ if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
         done
     fi
     echo ""
-    echo "Context files help Ralph understand your codebase better by providing:"
+    echo "Context files help Lisa understand your codebase better by providing:"
     echo "  • Architecture overview and system structure"
     echo "  • Business rules and domain logic"
     echo "  • General project information and setup"
@@ -452,7 +452,7 @@ if [[ "$SKIP_PRD" != "true" ]]; then
     # Step 4: Ask for validation
     while true; do
         echo -e "${YELLOW}Options:${NC}"
-        echo "  [y] Approve and start Ralph"
+        echo "  [y] Approve and start Lisa"
         echo "  [e] Edit PRD manually (opens in \$EDITOR)"
         echo "  [r] Regenerate with more details"
         echo "  [n] Cancel"
@@ -507,9 +507,9 @@ echo "" >> "$PROGRESS_FILE"
 echo "Started: $(date)" >> "$PROGRESS_FILE"
 echo "" >> "$PROGRESS_FILE"
 
-# Step 5: Ask how to run Ralph
+# Step 5: Ask how to run Lisa
 echo ""
-echo -e "${YELLOW}How should Ralph work?${NC}"
+echo -e "${YELLOW}How should Lisa work?${NC}"
 echo "  [1] Babysitting mode (one task, then stop)"
 echo "  [2] AFK mode (specify iterations)"
 echo ""
@@ -518,7 +518,7 @@ read -p "Your choice: " mode
 case $mode in
     1 )
         echo ""
-        echo -e "${CYAN}🚀 Starting Ralph (babysitting mode)...${NC}"
+        echo -e "${CYAN}🚀 Starting Lisa (babysitting mode)...${NC}"
         echo ""
         "$SCRIPT_DIR/scripts/lisa-once.sh"
         ;;
@@ -529,7 +529,7 @@ case $mode in
         open_monitor=${open_monitor:-Y}
         echo ""
 
-        echo -e "${CYAN}🚀 Starting Ralph (AFK mode, $iterations iterations)...${NC}"
+        echo -e "${CYAN}🚀 Starting Lisa (AFK mode, $iterations iterations)...${NC}"
 
         MONITOR_STARTED=false
 
@@ -564,7 +564,7 @@ EOF
             echo -e "${GREEN}║  📺 LOOK FOR THE NEW TERMINAL.APP WINDOW!            ║${NC}"
             echo -e "${GREEN}║                                                        ║${NC}"
             echo -e "${GREEN}║  A separate Terminal window should have opened with    ║${NC}"
-            echo -e "${GREEN}║  the Ralph Monitor. Check your other windows/spaces.   ║${NC}"
+            echo -e "${GREEN}║  the Lisa Monitor. Check your other windows/spaces.   ║${NC}"
             echo -e "${GREEN}║                                                        ║${NC}"
             echo -e "${GREEN}║  If you don't see it, press Cmd+Tab to find it.       ║${NC}"
             echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
@@ -592,20 +592,20 @@ EOF
 
             echo ""
             if [[ "$MONITOR_STARTED" == "true" ]]; then
-                echo -e "${GREEN}You can now see Ralph's progress in this terminal${NC}"
+                echo -e "${GREEN}You can now see Lisa's progress in this terminal${NC}"
                 echo -e "${GREEN}and oversight monitoring in the other terminal.${NC}"
             else
-                echo -e "${GREEN}You can now see Ralph's progress in this terminal.${NC}"
+                echo -e "${GREEN}You can now see Lisa's progress in this terminal.${NC}"
             fi
             echo ""
         fi
 
-        # Run ralph-afk (this blocks until completion)
+        # Run lisa-afk (this blocks until completion)
         "$SCRIPT_DIR/scripts/lisa-afk.sh" "$iterations"
 
-        # After ralph-afk completes, stop the monitor
+        # After lisa-afk completes, stop the monitor
         echo ""
-        echo -e "${YELLOW}Ralph AFK completed!${NC}"
+        echo -e "${YELLOW}Lisa AFK completed!${NC}"
         echo ""
 
         # Kill monitor gracefully (only if it was started)
@@ -671,7 +671,7 @@ if [[ -z "$all_files" ]]; then
     echo -e "${YELLOW}⚠ No new or modified files found to review.${NC}"
     echo ""
     echo "This is normal if:"
-    echo "  1. Ralph already committed all changes during AFK mode"
+    echo "  1. Lisa already committed all changes during AFK mode"
     echo "  2. No changes were made to the codebase"
     echo ""
     echo "To review committed changes, you can use:"
@@ -908,5 +908,5 @@ echo "  5. When satisfied, commit your changes:"
 echo "     git add ."
 echo "     git commit -m 'feat: implement [your feature]'"
 echo ""
-echo -e "${GREEN}✓ Ralph workflow complete!${NC}"
+echo -e "${GREEN}✓ Lisa workflow complete!${NC}"
 echo ""

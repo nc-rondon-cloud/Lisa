@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-review-and-fix.sh - Review code and automatically fix issues
+# lisa-review-and-fix.sh - Review code and automatically fix issues
 
 set -e
 
@@ -25,12 +25,12 @@ RED='\033[0;31m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Source the ralph library for logging and LISA_MODEL
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source the lisa library for logging and LISA_MODEL
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
 fi
 
-echo -e "${CYAN}🔍 Ralph Review & Fix - Automated Code Quality Loop${NC}"
+echo -e "${CYAN}🔍 Lisa Review & Fix - Automated Code Quality Loop${NC}"
 echo "==========================================="
 echo "Max iterations: $MAX_ITERATIONS"
 echo ""

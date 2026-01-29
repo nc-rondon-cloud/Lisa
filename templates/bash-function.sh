@@ -114,7 +114,7 @@ calculate_sum() {
 # -----------------------------------------------------------------------------
 # Purpose: Demonstrate function with integrated logging
 # Usage: backup_file "/path/to/file"
-# Requires: ralph-lib.sh to be sourced for logging functions
+# Requires: lisa-lib.sh to be sourced for logging functions
 # Returns: 0 on success, 1 on error
 # -----------------------------------------------------------------------------
 backup_file() {

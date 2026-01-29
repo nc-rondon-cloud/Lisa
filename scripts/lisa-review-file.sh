@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-review-file.sh - Review specific files
+# lisa-review-file.sh - Review specific files
 
 set -e
 
@@ -23,9 +23,9 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-# Source the ralph library for logging and LISA_MODEL
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source the lisa library for logging and LISA_MODEL
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
     lisa_info "Starting code review for specific files..."
 fi
 

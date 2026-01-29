@@ -1,4 +1,4 @@
-# Ralph AFK - Autonomous Task Execution
+# Lisa AFK - Autonomous Task Execution
 
 You are working autonomously on a project. The PRD (Product Requirements Document) and progress log have been provided to you.
 

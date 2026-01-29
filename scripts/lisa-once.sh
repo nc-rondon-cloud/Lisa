@@ -14,9 +14,9 @@ export LISA_STATUS_FILE="$LISA_DIR/.lisa-status.json"
 export LISA_STATE_FILE="$LISA_DIR/.lisa-state.json"
 export LISA_PROMPTS_DIR="$LISA_DIR/prompts"
 
-# Source ralph library for logging
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source lisa library for logging
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
     lisa_setup_logging
 fi
 
@@ -24,8 +24,8 @@ fi
 PRD_FILE="$LISA_DIR/PRD.md"
 PROGRESS_FILE="$LISA_DIR/progress.txt"
 
-# Load ralph-once prompt from template
-once_prompt=$(lisa_load_template "ralph-once-prompt.md" "PRD_FILE=$PRD_FILE" "PROGRESS_FILE=$PROGRESS_FILE")
+# Load lisa-once prompt from template
+once_prompt=$(lisa_load_template "lisa-once-prompt.md" "PRD_FILE=$PRD_FILE" "PROGRESS_FILE=$PROGRESS_FILE")
 
 IS_SANDBOX=1 claude --model "$LISA_MODEL" --dangerously-skip-permissions "@$PRD_FILE @$PROGRESS_FILE
 

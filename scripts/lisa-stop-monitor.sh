@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-stop-monitor.sh - Stop the running oversight monitor
+# lisa-stop-monitor.sh - Stop the running oversight monitor
 
 # Get script directory, lisa folder, and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # PID file is in lisa folder
 MONITOR_PID_FILE="$LISA_DIR/.lisa-monitor.pid"
 
-echo "🛑 Stopping Ralph Monitor..."
+echo "🛑 Stopping Lisa Monitor..."
 echo ""
 
 if [[ ! -f "$MONITOR_PID_FILE" ]]; then

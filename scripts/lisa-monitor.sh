@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-monitor.sh - Continuous oversight loop that reviews progress every 10 minutes
+# lisa-monitor.sh - Continuous oversight loop that reviews progress every 10 minutes
 set -e
 
 # Parse command line arguments for verbosity
@@ -34,16 +34,16 @@ export LISA_STATE_FILE="$LISA_DIR/.lisa-state.json"
 export LISA_MONITOR_PID_FILE="$LISA_DIR/.lisa-monitor.pid"
 export LISA_PROMPTS_DIR="$LISA_DIR/prompts"
 
-# Source ralph library for logging
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source lisa library for logging
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
     lisa_setup_logging
 fi
 
 # PRD.md and progress.txt are always inside the lisa folder (not project root)
 PRD_FILE="$LISA_DIR/PRD.md"
 PROGRESS_FILE="$LISA_DIR/progress.txt"
-MONITOR_LOG="$LISA_DIR/logs/ralph-monitor.log"
+MONITOR_LOG="$LISA_DIR/logs/lisa-monitor.log"
 # Context files are in project root (not lisa folder)
 CONTEXT_DIR="$PROJECT_ROOT/context"
 PROMPTS_DIR="$LISA_DIR/prompts"
@@ -125,7 +125,7 @@ load_review_prompt() {
     if [[ ! -f "$MONITOR_TEMPLATE" ]]; then
         # Fallback to inline prompt
         cat <<'EOF'
-You are Ralph's oversight system - a senior technical reviewer monitoring the implementation.
+You are Lisa's oversight system - a senior technical reviewer monitoring the implementation.
 
 **Your Role**: Review recent changes and ensure the implementation stays on track.
 
@@ -153,12 +153,12 @@ If the PRD needs updating (tasks were unclear, missing requirements discovered, 
 If no PRD changes needed, write: NO_PRD_CHANGES_NEEDED
 
 ### Recommendations
-[Any guidance for Ralph to improve the implementation]
+[Any guidance for Lisa to improve the implementation]
 
 ---
 **Important**:
 - Only suggest PRD changes if truly needed (unclear requirements, discovered gaps)
-- Don't suggest changes for minor code quality issues (let ralph-review-and-fix handle those)
+- Don't suggest changes for minor code quality issues (let lisa-review-and-fix handle those)
 - Focus on high-level alignment and architectural concerns
 EOF
         return 0
@@ -201,8 +201,8 @@ trap cleanup SIGTERM SIGINT EXIT
 # Get project name for display
 PROJECT_NAME="${LISA_PROJECT_NAME:-$(basename "$PROJECT_ROOT")}"
 
-lisa_info "🔍 Ralph Monitor started (PID: $$) - Project: $PROJECT_NAME"
-lisa_info "Waiting 15 minutes before first check to let Ralph make initial progress..."
+lisa_info "🔍 Lisa Monitor started (PID: $$) - Project: $PROJECT_NAME"
+lisa_info "Waiting 15 minutes before first check to let Lisa make initial progress..."
 echo ""
 
 # Wait 15 minutes before first check

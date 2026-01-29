@@ -1,4 +1,4 @@
-# Ralph Once - Single Task Prompt Template
+# Lisa Once - Single Task Prompt Template
 
 This template is used by `lisa-once.sh` to execute a single task from the PRD (babysitting mode).
 

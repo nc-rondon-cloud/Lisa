@@ -51,7 +51,7 @@ echo "========================================" >> "$AFK_LOG"
 echo "AFK Session Started: $(date)" >> "$AFK_LOG"
 echo "========================================" >> "$AFK_LOG"
 
-echo -e "${CYAN}Ralph AFK Mode${NC}"
+echo -e "${CYAN}Lisa AFK Mode${NC}"
 echo "========================================"
 echo ""
 

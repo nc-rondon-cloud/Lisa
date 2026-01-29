@@ -1,5 +1,5 @@
 #!/bin/bash
-# ralph-review-prd.sh - Review PRD implementation and fix issues
+# lisa-review-prd.sh - Review PRD implementation and fix issues
 
 set -e
 
@@ -25,12 +25,12 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-# Source the ralph library
-if [[ -f "$SCRIPT_DIR/ralph-lib.sh" ]]; then
-    source "$SCRIPT_DIR/ralph-lib.sh"
+# Source the lisa library
+if [[ -f "$SCRIPT_DIR/lisa-lib.sh" ]]; then
+    source "$SCRIPT_DIR/lisa-lib.sh"
 fi
 
-echo -e "${CYAN}🔍 Ralph PRD Review & Quality Check${NC}"
+echo -e "${CYAN}🔍 Lisa PRD Review & Quality Check${NC}"
 echo "==========================================="
 echo ""
 
