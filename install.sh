@@ -86,6 +86,16 @@ mkdir -p "$INSTALL_DIR/mlruns"
 
 # Create .gitignore for Lisa directory
 cat > "$INSTALL_DIR/.gitignore" <<'EOF'
+# This file itself (Lisa's .gitignore should not be committed)
+.gitignore
+
+# Lisa configuration (project-specific, should not be committed)
+lisa_config.yaml
+
+# Python requirements (project-specific)
+requirements.txt
+requirements-lisa.txt
+
 # Lisa temporary files
 review-results.txt
 fix-results.txt
@@ -151,16 +161,30 @@ if [[ -f "$REPO_GITIGNORE" ]]; then
         echo "context/" >> "$REPO_GITIGNORE"
         echo "✓ Added context/ to repository .gitignore"
     fi
+
+    # Check if lisa_config.yaml is already in .gitignore
+    if grep -q "^lisa_config\.yaml$" "$REPO_GITIGNORE" 2>/dev/null; then
+        echo "✓ lisa_config.yaml already in repository .gitignore"
+    else
+        echo "Adding lisa_config.yaml to repository .gitignore..."
+        echo "" >> "$REPO_GITIGNORE"
+        echo "# Lisa ML configuration (project-specific)" >> "$REPO_GITIGNORE"
+        echo "lisa_config.yaml" >> "$REPO_GITIGNORE"
+        echo "✓ Added lisa_config.yaml to repository .gitignore"
+    fi
 else
-    echo "Creating repository .gitignore with $LISA_BASENAME/ and context/..."
+    echo "Creating repository .gitignore with Lisa entries..."
     cat > "$REPO_GITIGNORE" <<EOF
 # Lisa AI assistant directory
 $LISA_BASENAME/
 
 # Generated context documentation (regenerate with lisa-prestart)
 context/
+
+# Lisa ML configuration (project-specific)
+lisa_config.yaml
 EOF
-    echo "✓ Created repository .gitignore with $LISA_BASENAME/ and context/"
+    echo "✓ Created repository .gitignore with Lisa entries"
 fi
 
 echo ""

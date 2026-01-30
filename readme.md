@@ -50,9 +50,13 @@ When you run `./lisa/lisa-start.sh --mode=code`:
 1. Lisa asks what you want to build
 2. Generates a PRD (Product Requirements Document)
 3. You approve, edit, or regenerate the PRD
-4. Lisa implements all tasks (babysitting or AFK mode)
+4. Lisa implements all tasks autonomously:
+   - **Babysitting mode**: You manually trigger each iteration
+   - **AFK mode**: Lisa runs continuously until all PRD tasks are complete
 5. Reviews the code for issues
 6. Auto-fixes problems found during review
+
+**Important**: Lisa works autonomously and makes technical decisions without asking. She uses existing codebase patterns and best practices to resolve any ambiguity.
 
 ### ML Mode (Data Science) - NEW!
 When you run `./lisa/lisa-start.sh --mode=ml`:
@@ -71,7 +75,7 @@ When you run `./lisa/lisa-start.sh --mode=ml`:
 |--------|-------------|
 | `scripts/gen-prd.sh` | Generate a PRD from a description |
 | `scripts/lisa-once.sh` | Execute a single task from the PRD |
-| `scripts/lisa-afk.sh <n>` | Run up to `n` iterations autonomously |
+| `scripts/lisa-afk.sh [max]` | Run autonomously until all PRD tasks complete (default max: 1000 iterations) |
 | `scripts/lisa-review.sh` | Review all modified files |
 | `scripts/lisa-review-file.sh <files>` | Review specific files |
 | `scripts/lisa-review-diff.sh [staged\|all]` | Review git changes |
@@ -85,9 +89,14 @@ When you run `./lisa/lisa-start.sh --mode=ml`:
 
 ### Examples
 
-**Run 50 iterations autonomously:**
+**Run autonomously until all tasks complete (with safety limit of 100 iterations):**
 ```bash
-./scripts/lisa-afk.sh 50
+./scripts/lisa-afk.sh 100
+```
+
+**Run with default safety limit (1000 iterations):**
+```bash
+./scripts/lisa-afk.sh
 ```
 
 **Review and fix all issues:**

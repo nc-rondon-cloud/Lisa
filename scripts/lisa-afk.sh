@@ -40,8 +40,12 @@ PRD_FILE="$LISA_DIR/PRD.md"
 PROGRESS_FILE="$LISA_DIR/progress.txt"
 AFK_PROMPT="$LISA_DIR/prompts/lisa-afk-prompt.md"
 
-if [ -z "$1" ]; then
-  echo "Usage: $0 <iterations>"
+# Max iterations (default to 1000 if not provided - safety limit)
+MAX_ITERATIONS=${1:-1000}
+
+if [[ "$MAX_ITERATIONS" -le 0 ]]; then
+  echo "Usage: $0 [max_iterations]"
+  echo "  max_iterations: Maximum number of iterations (default: 1000, use 0 for unlimited)"
   exit 1
 fi
 
@@ -51,8 +55,9 @@ echo "========================================" >> "$AFK_LOG"
 echo "AFK Session Started: $(date)" >> "$AFK_LOG"
 echo "========================================" >> "$AFK_LOG"
 
-echo -e "${CYAN}Lisa AFK Mode${NC}"
+echo -e "${CYAN}Lisa AFK Mode - Autonomous Execution${NC}"
 echo "========================================"
+echo -e "${YELLOW}Will run until all PRD tasks complete (max: $MAX_ITERATIONS iterations)${NC}"
 echo ""
 
 # Debug: Show paths and verify files exist
@@ -154,19 +159,20 @@ if [[ -f "$ML_CONFIG" ]]; then
     exit 0
 fi
 
-# Code Mode - Original behavior
+# Code Mode - Continue until COMPLETE or max iterations
 echo "========================================"
 echo -e "${CYAN}💻 Code Mode${NC}"
 echo "========================================"
 echo ""
 
-for ((i=1; i<=$1; i++)); do
-  echo -e "${YELLOW}Iteration $i/$1${NC}"
+i=1
+while [[ $i -le $MAX_ITERATIONS ]]; do
+  echo -e "${YELLOW}Iteration $i/$MAX_ITERATIONS${NC}"
   echo "----------------------------------------"
 
   # Log iteration start
   echo "" >> "$AFK_LOG"
-  echo "--- Iteration $i/$1 started at $(date) ---" >> "$AFK_LOG"
+  echo "--- Iteration $i/$MAX_ITERATIONS started at $(date) ---" >> "$AFK_LOG"
 
   # Read file contents
   prd_content=$(cat "$PRD_FILE")
@@ -223,17 +229,25 @@ for ((i=1; i<=$1; i++)); do
   # Check for completion marker
   if [[ "$result" == *"<promise>COMPLETE</promise>"* ]]; then
     echo ""
-    echo -e "${GREEN}PRD complete after $i iterations.${NC}"
+    echo -e "${GREEN}✓ All PRD tasks complete after $i iterations!${NC}"
     echo "PRD marked COMPLETE at $(date)" >> "$AFK_LOG"
+    echo ""
+    echo -e "${CYAN}Lisa has finished all tasks. Check the PRD for completed work.${NC}"
     exit 0
   fi
 
   echo -e "  ${GREEN}Iteration $i complete${NC}"
   echo "--- Iteration $i completed at $(date) ---" >> "$AFK_LOG"
   echo ""
+
+  # Increment counter
+  i=$((i + 1))
 done
 
 echo ""
-echo -e "${CYAN}All $1 iterations complete.${NC}"
+echo -e "${YELLOW}⚠ Reached maximum iterations ($MAX_ITERATIONS) without completing all tasks.${NC}"
+echo "Check $PRD_FILE to see remaining tasks."
 echo "Check $AFK_LOG for detailed logs."
+echo ""
+echo "To continue, run: $0 $MAX_ITERATIONS"
 echo ""
