@@ -59,13 +59,13 @@ run_eda() {
     fi
 
     # Build context
-    CONTEXT_PROMPT="$(cat <<EOF
+    CONTEXT_PROMPT="$(cat <<'EOF'
 You are LISA performing Exploratory Data Analysis.
 
 Read the following files:
 1. lisa/PRD.md - Project requirements and objectives
 2. lisa_config.yaml - Configuration
-3. $EDA_PROMPT - EDA instructions
+3. Prompt file in prompts/ - EDA instructions
 
 Then perform comprehensive EDA following the prompt instructions.
 
@@ -113,8 +113,7 @@ design_experiment() {
     echo "Previous experiments: $NUM_EXPERIMENTS"
     echo ""
 
-    CONTEXT_PROMPT="$(cat <<EOF
-You are LISA designing the next ML experiment.
+    CONTEXT_PROMPT="You are LISA designing the next ML experiment.
 
 Experiment ID: $NEXT_EXP_ID
 
@@ -122,9 +121,9 @@ Read the following:
 1. lisa/lisas_diary/eda_*.md - Latest EDA report
 2. lisa_config.yaml - Configuration and stopping criteria
 3. lisa/PRD.md - Target metrics
-4. $DESIGN_PROMPT - Experiment design instructions
+4. Prompt file in prompts/ - Experiment design instructions
 
-Analyze MLflow experiment history to see what's been tried.
+Analyze MLflow experiment history to see what has been tried.
 
 Then design the next experiment following the prompt instructions.
 
@@ -133,9 +132,7 @@ Key outputs:
 2. Document reasoning in lisas_diary/
 3. Output <promise>EXPERIMENT_DESIGNED:${NEXT_EXP_ID}</promise>
 
-Be strategic: choose model and hyperparameters that maximize chance of improvement.
-EOF
-)"
+Be strategic: choose model and hyperparameters that maximize chance of improvement."
 
     echo "$CONTEXT_PROMPT" | claude
 
@@ -210,14 +207,13 @@ evaluate_stopping() {
         exit 1
     fi
 
-    CONTEXT_PROMPT="$(cat <<EOF
-You are LISA evaluating whether to stop experimentation.
+    CONTEXT_PROMPT="You are LISA evaluating whether to stop experimentation.
 
 Read:
 1. lisa_config.yaml - Stopping criteria configuration
 2. lisa/PRD.md - Target metrics
 3. All entries in lisas_diary/
-4. $STOPPING_PROMPT - Stopping evaluation instructions
+4. Prompt file in prompts/ - Stopping evaluation instructions
 
 Query MLflow for all experiment results.
 
@@ -231,9 +227,7 @@ Make decision: STOP, CONTINUE, or CHANGE_STRATEGY
 
 Document decision in lisas_diary/ with detailed reasoning.
 
-Output: <promise>STOPPING_DECISION:{decision}:{best_score}:{recommendation}</promise>
-EOF
-)"
+Output: <promise>STOPPING_DECISION:{decision}:{best_score}:{recommendation}</promise>"
 
     echo "$CONTEXT_PROMPT" | claude
 
