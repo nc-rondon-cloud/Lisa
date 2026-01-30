@@ -82,7 +82,22 @@ EOF
 )"
 
     # Execute with Claude
-    echo "$CONTEXT_PROMPT" | claude
+    echo -e "${DIM}Running Claude for EDA...${NC}"
+    set +e
+    result=$(claude --model "$LISA_MODEL" --dangerously-skip-permissions "$CONTEXT_PROMPT" 2>&1)
+    exit_code=$?
+    set -e
+
+    # Log results
+    result_length=${#result}
+    echo -e "  Exit code: ${exit_code}, Output length: ${result_length} chars"
+
+    if [[ $exit_code -ne 0 ]]; then
+        echo -e "${RED}❌ Claude exited with error code $exit_code${NC}"
+        echo -e "${DIM}First 500 chars of output:${NC}"
+        echo "${result:0:500}"
+        return 1
+    fi
 
     # Check for completion signal
     if grep -q "EDA_COMPLETE" "$DIARY_DIR"/*.md 2>/dev/null; then
@@ -134,7 +149,22 @@ Key outputs:
 
 Be strategic: choose model and hyperparameters that maximize chance of improvement."
 
-    echo "$CONTEXT_PROMPT" | claude
+    echo -e "${DIM}Running Claude for experiment design...${NC}"
+    set +e
+    result=$(claude --model "$LISA_MODEL" --dangerously-skip-permissions "$CONTEXT_PROMPT" 2>&1)
+    exit_code=$?
+    set -e
+
+    # Log results
+    result_length=${#result}
+    echo -e "  Exit code: ${exit_code}, Output length: ${result_length} chars"
+
+    if [[ $exit_code -ne 0 ]]; then
+        echo -e "${RED}❌ Claude exited with error code $exit_code${NC}"
+        echo -e "${DIM}First 500 chars of output:${NC}"
+        echo "${result:0:500}"
+        return 1
+    fi
 
     # Check for experiment config
     EXP_CONFIG="$LISA_DIR/lisas_laboratory/experiments/${NEXT_EXP_ID}_config.json"
@@ -229,7 +259,22 @@ Document decision in lisas_diary/ with detailed reasoning.
 
 Output: <promise>STOPPING_DECISION:{decision}:{best_score}:{recommendation}</promise>"
 
-    echo "$CONTEXT_PROMPT" | claude
+    echo -e "${DIM}Running Claude for stopping criteria evaluation...${NC}"
+    set +e
+    result=$(claude --model "$LISA_MODEL" --dangerously-skip-permissions "$CONTEXT_PROMPT" 2>&1)
+    exit_code=$?
+    set -e
+
+    # Log results
+    result_length=${#result}
+    echo -e "  Exit code: ${exit_code}, Output length: ${result_length} chars"
+
+    if [[ $exit_code -ne 0 ]]; then
+        echo -e "${RED}❌ Claude exited with error code $exit_code${NC}"
+        echo -e "${DIM}First 500 chars of output:${NC}"
+        echo "${result:0:500}"
+        return 1
+    fi
 
     # Parse decision from diary
     LATEST_STOPPING=$(ls -t "$DIARY_DIR"/stopping_decision_*.md 2>/dev/null | head -1)

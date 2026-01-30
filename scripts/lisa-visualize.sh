@@ -91,7 +91,23 @@ EOF
 
 echo -e "${CYAN}Generating visualizations...${NC}\n"
 
-echo "$CONTEXT_PROMPT" | claude
+echo -e "${DIM}Running Claude for visualization generation...${NC}"
+set +e
+result=$(claude --model "$LISA_MODEL" --dangerously-skip-permissions "$CONTEXT_PROMPT" 2>&1)
+exit_code=$?
+set -e
+
+# Log results
+result_length=${#result}
+echo ""
+echo -e "  Exit code: ${exit_code}, Output length: ${result_length} chars"
+
+if [[ $exit_code -ne 0 ]]; then
+    echo -e "${RED}❌ Claude exited with error code $exit_code${NC}"
+    echo -e "${DIM}First 500 chars of output:${NC}"
+    echo "${result:0:500}"
+    exit 1
+fi
 
 # Count generated plots
 PLOT_DIR="$LISA_DIR/lisas_laboratory/plots"
