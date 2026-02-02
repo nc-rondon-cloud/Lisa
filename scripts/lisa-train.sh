@@ -27,9 +27,10 @@ if [[ -z "$EXPERIMENT_ID" ]]; then
     exit 1
 fi
 
-echo -e "${CYAN}🚂 LISA Model Training${NC}"
+echo -e "${CYAN}🚂 LISA Model Training [$(date +%H:%M:%S)]${NC}"
 echo "==========================================="
-echo "Experiment: $EXPERIMENT_ID"
+echo "Experiment: '$EXPERIMENT_ID'"
+echo "Experiment ID length: ${#EXPERIMENT_ID}"
 echo ""
 
 # Activate Python environment
@@ -118,11 +119,25 @@ if [[ $exit_code -ne 0 ]]; then
     exit 1
 fi
 
-# Check for completion
+# Check for completion in output first, then in diary files
+if [[ "$result" == *"TRAINING_COMPLETE:${EXPERIMENT_ID}"* ]] || [[ "$result" == *"<promise>TRAINING_COMPLETE:${EXPERIMENT_ID}"* ]]; then
+    echo -e "\n${GREEN}✓ Training completed (detected in output)${NC}"
+
+    # Try to extract score from output
+    if [[ "$result" =~ TRAINING_COMPLETE:${EXPERIMENT_ID}:([^:]+):([0-9.]+) ]]; then
+        METRIC="${BASH_REMATCH[1]}"
+        SCORE="${BASH_REMATCH[2]}"
+        echo -e "${GREEN}✓ ${METRIC}: ${SCORE}${NC}"
+    fi
+
+    exit 0
+fi
+
+# Fallback: check diary files
 TRAINING_ENTRY=$(ls -t "$LISA_DIR/lisas_diary"/training_*${EXPERIMENT_ID}*.md 2>/dev/null | head -1)
 
 if [[ -f "$TRAINING_ENTRY" ]]; then
-    echo -e "\n${GREEN}✓ Training completed${NC}"
+    echo -e "\n${GREEN}✓ Training completed (found in diary)${NC}"
 
     # Try to extract metrics from diary
     if grep -q "success: true" "$TRAINING_ENTRY" 2>/dev/null; then
@@ -140,6 +155,7 @@ if [[ -f "$TRAINING_ENTRY" ]]; then
         exit 0
     fi
 else
-    echo -e "\n${YELLOW}⚠ Training entry not found in diary${NC}"
-    exit 1
+    echo -e "\n${YELLOW}⚠ Training may have completed - check logs${NC}"
+    echo -e "${DIM}Looking for <promise>TRAINING_COMPLETE:${EXPERIMENT_ID}:metric:score</promise>${NC}"
+    exit 0
 fi

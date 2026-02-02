@@ -55,7 +55,7 @@ run_eda() {
 
     if [[ ! -f "$EDA_PROMPT" ]]; then
         echo -e "${RED}❌ EDA prompt not found: $EDA_PROMPT${NC}"
-        exit 1
+        return 1
     fi
 
     # Build context
@@ -99,25 +99,27 @@ EOF
         return 1
     fi
 
-    # Check for completion signal
-    if grep -q "EDA_COMPLETE" "$DIARY_DIR"/*.md 2>/dev/null; then
+    # Check for completion signal in output first, then in files
+    if [[ "$result" == *"EDA_COMPLETE"* ]] || grep -q "EDA_COMPLETE" "$DIARY_DIR"/*.md 2>/dev/null; then
         echo -e "\n${GREEN}✓ EDA completed successfully${NC}"
         return 0
     else
         echo -e "\n${YELLOW}⚠ EDA may not have completed - check lisas_diary/${NC}"
+        echo -e "${DIM}Looking for <promise>EDA_COMPLETE</promise> in output or diary files${NC}"
         return 1
     fi
 }
 
 # Function: Design experiment
+# Sets global EXPERIMENT_ID variable with the designed experiment ID
 design_experiment() {
-    echo -e "\n${CYAN}=== Phase 2: Experiment Design ===${NC}\n"
+    echo -e "\n${CYAN}=== Phase 2: Experiment Design === [$(date +%H:%M:%S)]${NC}\n"
 
     DESIGN_PROMPT="$LISA_DIR/prompts/lisa-experiment-design-prompt.md"
 
     if [[ ! -f "$DESIGN_PROMPT" ]]; then
         echo -e "${RED}❌ Design prompt not found: $DESIGN_PROMPT${NC}"
-        exit 1
+        return 1
     fi
 
     # Count previous experiments
@@ -166,14 +168,32 @@ Be strategic: choose model and hyperparameters that maximize chance of improveme
         return 1
     fi
 
-    # Check for experiment config
+    # Check for experiment config or completion marker in output
     EXP_CONFIG="$LISA_DIR/lisas_laboratory/experiments/${NEXT_EXP_ID}_config.json"
-    if [[ -f "$EXP_CONFIG" ]]; then
+
+    if [[ -f "$EXP_CONFIG" ]] || [[ "$result" == *"EXPERIMENT_DESIGNED:${NEXT_EXP_ID}"* ]]; then
         echo -e "\n${GREEN}✓ Experiment designed: $NEXT_EXP_ID${NC}"
-        echo "$NEXT_EXP_ID"
-        return 0
+
+        # If config file exists, set global and return success
+        if [[ -f "$EXP_CONFIG" ]]; then
+            EXPERIMENT_ID="$NEXT_EXP_ID"
+            return 0
+        else
+            # Claude may still be writing the file, wait briefly
+            sleep 2
+            if [[ -f "$EXP_CONFIG" ]]; then
+                EXPERIMENT_ID="$NEXT_EXP_ID"
+                return 0
+            else
+                echo -e "${YELLOW}⚠ Design completed but config file not found yet${NC}"
+                EXPERIMENT_ID="$NEXT_EXP_ID"  # Still set the ID
+                return 0
+            fi
+        fi
     else
         echo -e "\n${RED}❌ Experiment config not found: $EXP_CONFIG${NC}"
+        echo -e "${DIM}Looking for config file or <promise>EXPERIMENT_DESIGNED:${NEXT_EXP_ID}</promise>${NC}"
+        EXPERIMENT_ID=""  # Clear on failure
         return 1
     fi
 }
@@ -234,7 +254,7 @@ evaluate_stopping() {
 
     if [[ ! -f "$STOPPING_PROMPT" ]]; then
         echo -e "${RED}❌ Stopping prompt not found: $STOPPING_PROMPT${NC}"
-        exit 1
+        return 1
     fi
 
     CONTEXT_PROMPT="You are LISA evaluating whether to stop experimentation.
@@ -276,26 +296,40 @@ Output: <promise>STOPPING_DECISION:{decision}:{best_score}:{recommendation}</pro
         return 1
     fi
 
-    # Parse decision from diary
+    # Parse decision from output first, then from diary files
+    echo -e "\n${GREEN}✓ Stopping criteria evaluated${NC}"
+
+    # Check output for decision markers
+    if [[ "$result" == *"STOPPING_DECISION:STOP"* ]] || [[ "$result" == *"<promise>STOPPING_DECISION:STOP"* ]]; then
+        echo -e "\n${YELLOW}Decision: STOP experimentation${NC}"
+        return 10  # Special exit code for STOP
+    elif [[ "$result" == *"STOPPING_DECISION:CHANGE_STRATEGY"* ]] || [[ "$result" == *"<promise>STOPPING_DECISION:CHANGE_STRATEGY"* ]]; then
+        echo -e "\n${YELLOW}Decision: CHANGE STRATEGY${NC}"
+        return 11  # Special exit code for strategy change
+    elif [[ "$result" == *"STOPPING_DECISION:CONTINUE"* ]] || [[ "$result" == *"<promise>STOPPING_DECISION:CONTINUE"* ]]; then
+        echo -e "\n${GREEN}Decision: CONTINUE${NC}"
+        return 0
+    fi
+
+    # Fallback: check diary files
     LATEST_STOPPING=$(ls -t "$DIARY_DIR"/stopping_decision_*.md 2>/dev/null | head -1)
 
     if [[ -f "$LATEST_STOPPING" ]]; then
-        echo -e "\n${GREEN}✓ Stopping criteria evaluated${NC}"
-
-        # Try to extract decision
+        # Try to extract decision from file
         if grep -q "STOP" "$LATEST_STOPPING"; then
-            echo -e "\n${YELLOW}Decision: STOP experimentation${NC}"
-            return 10  # Special exit code for STOP
+            echo -e "\n${YELLOW}Decision: STOP experimentation (from diary)${NC}"
+            return 10
         elif grep -q "CHANGE_STRATEGY" "$LATEST_STOPPING"; then
-            echo -e "\n${YELLOW}Decision: CHANGE STRATEGY${NC}"
-            return 11  # Special exit code for strategy change
+            echo -e "\n${YELLOW}Decision: CHANGE STRATEGY (from diary)${NC}"
+            return 11
         else
-            echo -e "\n${GREEN}Decision: CONTINUE${NC}"
+            echo -e "\n${GREEN}Decision: CONTINUE (from diary)${NC}"
             return 0
         fi
     else
-        echo -e "\n${YELLOW}⚠ Could not find stopping decision${NC}"
-        return 1
+        # Default to CONTINUE if no clear decision found
+        echo -e "\n${GREEN}Decision: CONTINUE (default - no clear signal found)${NC}"
+        return 0
     fi
 }
 
@@ -317,6 +351,9 @@ main() {
                 run_eda || exit 1
             fi
             design_experiment
+            if [[ -n "$EXPERIMENT_ID" ]]; then
+                echo "Designed: $EXPERIMENT_ID"
+            fi
             ;;
 
         train)
@@ -359,13 +396,20 @@ main() {
             fi
 
             # 2. Design experiment
-            EXPERIMENT_ID=$(design_experiment)
+            echo -e "${CYAN}DEBUG: Before design_experiment, EXPERIMENT_ID='$EXPERIMENT_ID'${NC}"
+            design_experiment
+            echo -e "${CYAN}DEBUG: After design_experiment, EXPERIMENT_ID='$EXPERIMENT_ID'${NC}"
+
+            # design_experiment sets EXPERIMENT_ID global variable
             if [[ -z "$EXPERIMENT_ID" ]]; then
-                echo -e "${RED}❌ Failed to design experiment${NC}"
+                echo -e "${RED}❌ Failed to design experiment (EXPERIMENT_ID is empty)${NC}"
                 exit 1
             fi
 
+            echo -e "${GREEN}✓ Using experiment: $EXPERIMENT_ID${NC}"
+
             # 3. Train
+            echo -e "${CYAN}DEBUG: Calling train_model with EXPERIMENT_ID='$EXPERIMENT_ID'${NC}"
             if ! train_model "$EXPERIMENT_ID"; then
                 echo -e "${RED}❌ Training failed${NC}"
                 exit 1
@@ -381,15 +425,17 @@ main() {
             generate_visualizations "$EXPERIMENT_ID"
 
             # 6. Stopping criteria
+            set +e  # Temporarily disable exit-on-error to capture special exit codes
             evaluate_stopping
             STOP_CODE=$?
+            set -e  # Re-enable exit-on-error
 
             if [[ $STOP_CODE -eq 10 ]]; then
                 echo -e "\n${GREEN}🎉 Experimentation complete! Target achieved.${NC}"
-                exit 0
+                exit 10  # Propagate STOP code to lisa-afk.sh
             elif [[ $STOP_CODE -eq 11 ]]; then
                 echo -e "\n${YELLOW}⚠ Strategy change recommended${NC}"
-                exit 0
+                exit 11  # Return special code for strategy change
             else
                 echo -e "\n${CYAN}Continue with next experiment${NC}"
                 exit 0

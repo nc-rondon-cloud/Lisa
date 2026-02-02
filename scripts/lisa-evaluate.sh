@@ -96,26 +96,38 @@ if [[ $exit_code -ne 0 ]]; then
     exit 1
 fi
 
-# Check for completion
+# Check for completion in output first, then in diary files
+echo -e "\n${GREEN}✓ Evaluation completed${NC}"
+
+# Check output for recommendation
+if [[ "$result" == *"EVALUATION_COMPLETE:${EXPERIMENT_ID}:DEPLOY"* ]] || [[ "$result" == *"<promise>EVALUATION_COMPLETE:${EXPERIMENT_ID}:DEPLOY"* ]]; then
+    echo -e "${GREEN}🎉 Recommendation: DEPLOY - Target achieved!${NC}"
+    exit 0
+elif [[ "$result" == *"EVALUATION_COMPLETE:${EXPERIMENT_ID}:CONTINUE"* ]] || [[ "$result" == *"<promise>EVALUATION_COMPLETE:${EXPERIMENT_ID}:CONTINUE"* ]]; then
+    echo -e "${CYAN}→ Recommendation: CONTINUE experimenting${NC}"
+    exit 0
+elif [[ "$result" == *"EVALUATION_COMPLETE:${EXPERIMENT_ID}:TRY_DIFFERENT_APPROACH"* ]] || [[ "$result" == *"<promise>EVALUATION_COMPLETE:${EXPERIMENT_ID}:TRY_DIFFERENT_APPROACH"* ]]; then
+    echo -e "${YELLOW}⚠ Recommendation: Try different approach${NC}"
+    exit 0
+fi
+
+# Fallback: check diary files
 EVAL_ENTRY=$(ls -t "$LISA_DIR/lisas_diary"/evaluation_*.md 2>/dev/null | head -1)
 
 if [[ -f "$EVAL_ENTRY" ]]; then
-    echo -e "\n${GREEN}✓ Evaluation completed${NC}"
-
-    # Extract recommendation
+    # Extract recommendation from file
     if grep -q "DEPLOY" "$EVAL_ENTRY" 2>/dev/null; then
-        echo -e "${GREEN}🎉 Recommendation: DEPLOY - Target achieved!${NC}"
+        echo -e "${GREEN}🎉 Recommendation: DEPLOY - Target achieved! (from diary)${NC}"
         exit 0
     elif grep -q "CONTINUE" "$EVAL_ENTRY" 2>/dev/null; then
-        echo -e "${CYAN}→ Recommendation: CONTINUE experimenting${NC}"
+        echo -e "${CYAN}→ Recommendation: CONTINUE experimenting (from diary)${NC}"
         exit 0
     elif grep -q "TRY_DIFFERENT_APPROACH" "$EVAL_ENTRY" 2>/dev/null; then
-        echo -e "${YELLOW}⚠ Recommendation: Try different approach${NC}"
+        echo -e "${YELLOW}⚠ Recommendation: Try different approach (from diary)${NC}"
         exit 0
     fi
-
-    exit 0
-else
-    echo -e "\n${YELLOW}⚠ Evaluation entry not found${NC}"
-    exit 1
 fi
+
+# Default to CONTINUE if no clear recommendation
+echo -e "${CYAN}→ Recommendation: CONTINUE experimenting (default)${NC}"
+exit 0

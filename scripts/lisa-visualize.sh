@@ -109,11 +109,22 @@ if [[ $exit_code -ne 0 ]]; then
     exit 1
 fi
 
-# Count generated plots
-PLOT_DIR="$LISA_DIR/lisas_laboratory/plots"
-NUM_PLOTS=$(find "$PLOT_DIR" -name "*.png" -mmin -10 | wc -l | tr -d ' ')
+# Check for completion in output first
+if [[ "$result" == *"VISUALIZATIONS_COMPLETE"* ]] || [[ "$result" == *"<promise>VISUALIZATIONS_COMPLETE"* ]]; then
+    echo -e "\n${GREEN}✓ Visualizations completed (detected in output)${NC}"
 
-echo -e "\n${GREEN}✓ Generated $NUM_PLOTS visualizations${NC}"
+    # Try to extract count from output
+    if [[ "$result" =~ VISUALIZATIONS_COMPLETE:([0-9]+) ]]; then
+        NUM_PLOTS="${BASH_REMATCH[1]}"
+        echo -e "${GREEN}✓ Generated ${NUM_PLOTS} plots${NC}"
+    fi
+fi
+
+# Count generated plots as confirmation
+PLOT_DIR="$LISA_DIR/lisas_laboratory/plots"
+NUM_PLOTS=$(find "$PLOT_DIR" -name "*.png" -mmin -10 2>/dev/null | wc -l | tr -d ' ')
+
+echo -e "\n${GREEN}✓ Found $NUM_PLOTS visualizations in last 10 minutes${NC}"
 echo "Location: $PLOT_DIR"
 
 exit 0

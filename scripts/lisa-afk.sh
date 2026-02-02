@@ -130,21 +130,33 @@ if [[ -f "$ML_CONFIG" ]]; then
         echo -e "\n${YELLOW}=== ML Experiment Cycle $((experiment_count + 1))/$MAX_EXPERIMENTS ===${NC}\n"
 
         # Run complete experiment cycle
-        if bash "$SCRIPT_DIR/lisa-experiment.sh" all; then
+        set +e
+        bash "$SCRIPT_DIR/lisa-experiment.sh" all
+        EXPERIMENT_EXIT_CODE=$?
+        set -e
+
+        echo -e "${CYAN}DEBUG: lisa-experiment.sh exited with code: $EXPERIMENT_EXIT_CODE${NC}"
+
+        if [[ $EXPERIMENT_EXIT_CODE -eq 0 ]]; then
+            # Continue with next experiment
+            experiment_count=$((experiment_count + 1))
+        elif [[ $EXPERIMENT_EXIT_CODE -eq 10 ]]; then
+            # STOP - Target achieved or resource limit
+            echo -e "\n${GREEN}🎉 Stopping criteria met - experimentation complete!${NC}"
+            echo "ML Mode completed successfully at $(date)" >> "$AFK_LOG"
+            echo -e "\n${CYAN}Check lisas_diary/ for final analysis and lisas_laboratory/ for results${NC}"
+            exit 0
+        elif [[ $EXPERIMENT_EXIT_CODE -eq 11 ]]; then
+            # Strategy change recommended - continue with adjusted approach
+            echo -e "\n${YELLOW}⚠ Strategy change detected - will adjust approach${NC}"
+            echo -e "${CYAN}Lisa will automatically explore alternative approaches in next iteration${NC}"
             experiment_count=$((experiment_count + 1))
 
-            # Check if stopping decision was made
-            LATEST_STOPPING=$(ls -t "$LISA_DIR/lisas_diary"/stopping_decision_*.md 2>/dev/null | head -1)
-
-            if [[ -f "$LATEST_STOPPING" ]]; then
-                if grep -q "STOP" "$LATEST_STOPPING" && grep -q "TARGET_ACHIEVED\|RESOURCE_LIMIT" "$LATEST_STOPPING"; then
-                    echo -e "\n${GREEN}🎉 Stopping criteria met - experimentation complete!${NC}"
-                    echo "ML Mode completed at $(date)" >> "$AFK_LOG"
-                    exit 0
-                fi
-            fi
+            # Log strategy change
+            echo "Strategy change at experiment $experiment_count ($(date))" >> "$AFK_LOG"
         else
-            echo -e "${RED}❌ Experiment cycle failed${NC}"
+            # Real failure
+            echo -e "${RED}❌ Experiment cycle failed with code $EXPERIMENT_EXIT_CODE${NC}"
             exit 1
         fi
 
