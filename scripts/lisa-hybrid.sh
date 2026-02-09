@@ -259,12 +259,15 @@ if [[ -f "$LISA_DIR/BEST_MODEL.json" ]]; then
     echo ""
 
     # Pretty print key info using Python
+    export BEST_MODEL_PATH="$LISA_DIR/BEST_MODEL.json"
     python3 <<'EOF'
 import json
 import sys
+import os
 
 try:
-    with open('lisa/BEST_MODEL.json') as f:
+    best_model_path = os.environ.get('BEST_MODEL_PATH', 'lisa/BEST_MODEL.json')
+    with open(best_model_path) as f:
         model = json.load(f)
 
     print(f"  Model Type: {model.get('model_type', 'unknown')}")

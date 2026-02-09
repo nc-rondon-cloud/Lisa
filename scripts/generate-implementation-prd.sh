@@ -80,14 +80,38 @@ echo ""
 cd "$PROJECT_ROOT"
 
 # Call Claude with the prompt
-# Note: This assumes Claude CLI is available and configured
-if ! command -v claude &> /dev/null; then
-    echo -e "${RED}✗ Claude CLI not found${NC}"
+# Note: This requires Claude CLI to be installed and configured
+# If not available, we'll create a template-based PRD instead
+CLAUDE_AVAILABLE=false
+if command -v claude &> /dev/null; then
+    CLAUDE_AVAILABLE=true
+fi
+
+if [[ "$CLAUDE_AVAILABLE" == "false" ]]; then
+    echo -e "${YELLOW}⚠ Claude CLI not found - creating template-based PRD${NC}"
     echo ""
-    echo "The 'claude' command is not available. Please ensure Claude CLI is installed."
+    echo "For best results, install Claude CLI:"
+    echo "  https://github.com/anthropics/claude-code"
     echo ""
-    rm -f "$TEMP_PROMPT"
-    exit 1
+    echo "Generating basic PRD template..."
+
+    # Create a basic template-based PRD
+    "$SCRIPT_DIR/create-template-prd.sh" "$BEST_MODEL_FILE"
+
+    if [[ $? -eq 0 ]]; then
+        echo ""
+        echo -e "${GREEN}✓ Template PRD created${NC}"
+        echo ""
+        echo "The PRD contains basic integration tasks."
+        echo "Code mode will refine and implement them."
+        echo ""
+        rm -f "$TEMP_PROMPT"
+        exit 0
+    else
+        echo -e "${RED}✗ Failed to create template PRD${NC}"
+        rm -f "$TEMP_PROMPT"
+        exit 1
+    fi
 fi
 
 # Create output file for Claude's response

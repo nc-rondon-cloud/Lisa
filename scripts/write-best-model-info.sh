@@ -52,14 +52,20 @@ cd "$PROJECT_ROOT"
 
 # Query MLflow for best run using Python
 echo "Querying MLflow for best model..."
+
+# Export LISA_DIR for Python script
+export LISA_DIR_FOR_PYTHON="$LISA_DIR"
+
 python3 <<'EOF'
 import sys
 import json
+import os
 from pathlib import Path
 
 try:
-    # Import Lisa modules
-    sys.path.insert(0, str(Path(__file__).parent.parent / 'lisa'))
+    # Import Lisa modules using LISA_DIR from environment
+    lisa_dir = os.environ.get('LISA_DIR_FOR_PYTHON', 'lisa')
+    sys.path.insert(0, lisa_dir)
     from lisa.mlflow_manager import MLflowManager
     from lisa.config import Config
 
