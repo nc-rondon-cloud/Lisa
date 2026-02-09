@@ -512,10 +512,28 @@ echo ""
 echo -e "${YELLOW}How should Lisa work?${NC}"
 echo "  [1] Babysitting mode (one task, then stop)"
 echo "  [2] AFK mode (specify iterations)"
+echo "  [3] Reset Lisa (clear all project data)"
 echo ""
 read -p "Your choice: " mode
 
 case $mode in
+    3 )
+        echo ""
+        echo -e "${YELLOW}⚠ Reset Lisa${NC}"
+        echo "This will clear all project data and return to a clean state."
+        echo ""
+        read -p "Continue with reset? [y/N]: " reset_confirm
+        case $reset_confirm in
+            [Yy]*)
+                "$SCRIPT_DIR/scripts/lisa-reset.sh"
+                exit $?
+                ;;
+            *)
+                echo "Reset cancelled."
+                exit 0
+                ;;
+        esac
+        ;;
     1 )
         echo ""
         echo -e "${CYAN}🚀 Starting Lisa (babysitting mode)...${NC}"

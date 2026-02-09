@@ -86,6 +86,7 @@ When you run `./lisa/lisa-start.sh --mode=ml`:
 | `scripts/lisa-train.sh` | ML: Train model with monitoring |
 | `scripts/lisa-evaluate.sh` | ML: Evaluate trained models |
 | `scripts/lisa-visualize.sh` | ML: Generate visualizations |
+| `scripts/lisa-reset.sh` | Reset Lisa to clean state (clear all artifacts) |
 
 ### Examples
 
@@ -113,6 +114,48 @@ When you run `./lisa/lisa-start.sh --mode=ml`:
 ```bash
 ./scripts/lisa-afk.sh 20  # With lisa_config.yaml present
 ```
+
+## Resetting Lisa
+
+To start a fresh project or experiment without reinstalling:
+
+```bash
+# Interactive reset with confirmation
+./scripts/lisa-reset.sh
+
+# Create backup before reset
+./scripts/lisa-reset.sh --backup
+
+# Reset without confirmation (use with caution!)
+./scripts/lisa-reset.sh --force
+
+# Preview what will be deleted
+./scripts/lisa-reset.sh --dry-run
+
+# Keep ML configuration
+./scripts/lisa-reset.sh --keep-config
+
+# Keep context documentation
+./scripts/lisa-reset.sh --keep-context
+
+# Combine options
+./scripts/lisa-reset.sh --backup --keep-config
+```
+
+**What gets cleared:**
+- Project requirements (PRD.md) and progress logs
+- All state and temporary files
+- ML artifacts, experiments, and models
+- MLflow tracking data
+- All log files
+
+**What gets preserved:**
+- Lisa scripts, prompts, and templates
+- Python ML modules
+- Configuration templates
+- Guidelines and documentation
+
+After reset, Lisa is in a clean state as if `install.sh` had just been run.
 
 ## Key Files
 
