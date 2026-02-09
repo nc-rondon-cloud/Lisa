@@ -44,16 +44,18 @@ class ModelTrainer:
         ]
     }
 
-    def __init__(self, task_type: str = 'classification', random_seed: int = 42):
+    def __init__(self, task_type: str = 'classification', random_seed: int = 42, verbose: bool = True):
         """
         Initialize trainer
 
         Args:
             task_type: 'classification' or 'regression'
             random_seed: Random seed for reproducibility
+            verbose: Show progress bars and detailed logs
         """
         self.task_type = task_type
         self.random_seed = random_seed
+        self.verbose = verbose
         self.model = None
         self.training_history = []
 
@@ -174,7 +176,9 @@ class ModelTrainer:
         y_train: Union[pd.Series, np.ndarray],
         X_val: Optional[Union[pd.DataFrame, np.ndarray]] = None,
         y_val: Optional[Union[pd.Series, np.ndarray]] = None,
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[Dict[str, Any]] = None,
+        monitor: Optional[Any] = None,
+        mlflow_mgr: Optional[Any] = None
     ) -> Dict[str, Any]:
         """
         Train a model
@@ -186,42 +190,100 @@ class ModelTrainer:
             X_val: Validation features (optional)
             y_val: Validation target (optional)
             params: Model hyperparameters
+            monitor: TrainingMonitor instance for logging
+            mlflow_mgr: MLflowManager instance for experiment tracking
 
         Returns:
             Training results dictionary
         """
+        from .callbacks import XGBoostProgressCallback, LightGBMProgressCallback, GenericProgressWrapper
+
         # Create model
         self.model = self.create_model(model_type, params)
 
         # Train with or without validation
         if X_val is not None and y_val is not None:
-            # Models that support early stopping
+            # Models that support early stopping and callbacks
             if model_type in ['xgboost', 'lightgbm']:
                 if model_type == 'xgboost':
+                    # Get number of estimators for progress bar
+                    n_estimators = params.get('n_estimators', 100) if params else 100
+
+                    # Create progress callback if verbose
+                    if self.verbose:
+                        print(f"\n🚀 Starting XGBoost training ({n_estimators} rounds)...")
+                        progress_callback = XGBoostProgressCallback(
+                            total_rounds=n_estimators,
+                            monitor=monitor,
+                            mlflow_mgr=mlflow_mgr,
+                            metric_name='logloss' if self.task_type == 'classification' else 'rmse'
+                        )
+                        custom_callbacks = [progress_callback]
+                    else:
+                        custom_callbacks = []
+
                     self.model.fit(
                         X_train, y_train,
-                        eval_set=[(X_val, y_val)],
+                        eval_set=[(X_train, y_train), (X_val, y_val)],
                         verbose=False
                     )
+
+                    if self.verbose and custom_callbacks:
+                        # Close progress bar
+                        progress_callback.close()
+
                     # Get training history from evals_result
                     results = self.model.evals_result()
-                    self.training_history = results.get('validation_0', {})
+                    self.training_history = results.get('validation_1', {})
 
                 elif model_type == 'lightgbm':
+                    # Get number of estimators for progress bar
+                    n_estimators = params.get('n_estimators', 100) if params else 100
+
+                    # Create progress callback if verbose
+                    callbacks_list = [lgb.early_stopping(50), lgb.log_evaluation(0)]
+
+                    if self.verbose:
+                        print(f"\n🚀 Starting LightGBM training ({n_estimators} rounds)...")
+                        progress_callback = LightGBMProgressCallback(
+                            total_rounds=n_estimators,
+                            monitor=monitor,
+                            mlflow_mgr=mlflow_mgr,
+                            metric_name='binary_logloss' if self.task_type == 'classification' else 'rmse'
+                        )
+                        callbacks_list.append(progress_callback)
+
                     self.model.fit(
                         X_train, y_train,
-                        eval_set=[(X_val, y_val)],
-                        callbacks=[lgb.early_stopping(50), lgb.log_evaluation(0)]
+                        eval_set=[(X_train, y_train), (X_val, y_val)],
+                        callbacks=callbacks_list
                     )
+
+                    if self.verbose:
+                        # Close progress bar
+                        progress_callback.close()
+
                     # Get training history
                     self.training_history = self.model.evals_result_
 
             else:
-                # Standard sklearn fit
-                self.model.fit(X_train, y_train)
+                # Standard sklearn models with progress wrapper
+                if self.verbose:
+                    model_name = model_type.replace('_', ' ').title()
+                    print(f"\n🤖 Training {model_name}...")
+                    wrapper = GenericProgressWrapper(desc=model_name)
+                    wrapper.train_with_progress(self.model, X_train, y_train)
+                else:
+                    self.model.fit(X_train, y_train)
         else:
             # Train without validation
-            self.model.fit(X_train, y_train)
+            if self.verbose:
+                model_name = model_type.replace('_', ' ').title()
+                print(f"\n🤖 Training {model_name}...")
+                wrapper = GenericProgressWrapper(desc=model_name)
+                wrapper.train_with_progress(self.model, X_train, y_train)
+            else:
+                self.model.fit(X_train, y_train)
 
         # Evaluate on training data
         train_score = self.model.score(X_train, y_train)

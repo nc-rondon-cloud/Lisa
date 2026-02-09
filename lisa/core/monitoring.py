@@ -58,7 +58,8 @@ class TrainingMonitor:
         epoch: int,
         train_metric: float,
         val_metric: Optional[float] = None,
-        learning_rate: Optional[float] = None
+        learning_rate: Optional[float] = None,
+        verbose: bool = False
     ):
         """
         Log metrics for an epoch
@@ -68,9 +69,12 @@ class TrainingMonitor:
             train_metric: Training metric value
             val_metric: Validation metric value (optional)
             learning_rate: Current learning rate (optional)
+            verbose: Print epoch metrics to console
         """
         self.epochs.append(epoch)
         self.train_metrics.append(train_metric)
+
+        is_best = False
 
         if val_metric is not None:
             self.val_metrics.append(val_metric)
@@ -81,11 +85,20 @@ class TrainingMonitor:
                 self.best_val_metric = val_metric
                 self.best_epoch = epoch
                 self.epochs_since_improvement = 0
+                is_best = True
             else:
                 self.epochs_since_improvement += 1
 
         if learning_rate is not None:
             self.learning_rates.append(learning_rate)
+
+        # Console output if verbose
+        if verbose:
+            improvement = " ✓ NEW BEST" if is_best else ""
+            if val_metric is not None:
+                print(f"Epoch {epoch:3d} | Train: {train_metric:.4f} | Val: {val_metric:.4f}{improvement}")
+            else:
+                print(f"Epoch {epoch:3d} | Train: {train_metric:.4f}")
 
     def check_convergence(self) -> Tuple[bool, str]:
         """
@@ -269,6 +282,44 @@ class TrainingMonitor:
                     recommendations.append("Consider using learning rate scheduler")
 
         return recommendations
+
+    def print_training_summary(self):
+        """Print comprehensive training summary to console."""
+        print("\n" + "="*60)
+        print("Training Summary")
+        print("="*60)
+        print(f"Total Epochs: {len(self.epochs)}")
+
+        if self.best_val_metric is not None:
+            print(f"Best Epoch: {self.best_epoch}")
+            print(f"Best Val Metric: {self.best_val_metric:.4f}")
+
+        if self.train_metrics:
+            print(f"Final Train Metric: {self.train_metrics[-1]:.4f}")
+
+        if self.val_metrics:
+            print(f"Final Val Metric: {self.val_metrics[-1]:.4f}")
+
+        # Check for issues
+        converged, reason = self.check_convergence()
+        overfitting, overfit_reason = self.check_overfitting()
+
+        print(f"\nConverged: {converged}")
+        if converged:
+            print(f"  └─ {reason}")
+
+        print(f"Overfitting: {overfitting}")
+        if overfitting:
+            print(f"  └─ {overfit_reason}")
+
+        # Recommendations
+        recommendations = self.get_recommendations()
+        if recommendations:
+            print("\nRecommendations:")
+            for rec in recommendations:
+                print(f"  • {rec}")
+
+        print("="*60 + "\n")
 
     def plot_training_curves(self, output_path: Optional[str] = None):
         """

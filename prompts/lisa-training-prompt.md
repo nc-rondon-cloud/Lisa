@@ -76,9 +76,9 @@ if preprocessing['scale_features']:
 ```python
 from lisa.core.training import ModelTrainer
 
-# Initialize trainer
+# Initialize trainer with verbose mode enabled
 task_type = 'classification'  # or 'regression' from PRD
-trainer = ModelTrainer(task_type=task_type, random_seed=42)
+trainer = ModelTrainer(task_type=task_type, random_seed=42, verbose=True)
 
 # Create splits (70/15/15)
 X_train, X_val, X_test, y_train, y_val, y_test = trainer.prepare_data(
@@ -87,7 +87,11 @@ X_train, X_val, X_test, y_train, y_val, y_test = trainer.prepare_data(
     val_size=0.15
 )
 
-print(f"Train: {len(X_train)}, Val: {len(X_val)}, Test: {len(X_test)}")
+print(f"📊 Data Split:")
+print(f"  Train: {len(X_train)} samples")
+print(f"  Val: {len(X_val)} samples")
+print(f"  Test: {len(X_test)} samples")
+print(f"  Features: {X_train.shape[1]}")
 ```
 
 ### 4. Initialize MLflow Run
@@ -131,19 +135,25 @@ monitor = TrainingMonitor(
     convergence_threshold=0.001
 )
 
-# Train model
-print(f"Training {experiment_config['model_type']}...")
-
+# Train model with monitor and mlflow integration
+# The trainer will show progress bars for XGBoost/LightGBM
+# and log epoch-by-epoch metrics for tracking
 results = trainer.train(
     model_type=experiment_config['model_type'],
     X_train=X_train,
     y_train=y_train,
     X_val=X_val,
     y_val=y_val,
-    params=experiment_config['hyperparameters']
+    params=experiment_config['hyperparameters'],
+    monitor=monitor,              # Pass monitor for per-epoch logging
+    mlflow_mgr=mlflow_mgr         # Pass mlflow for automatic metric logging
 )
 
-print(f"Training completed!")
+# Print training summary with recommendations
+if monitor.epochs:
+    monitor.print_training_summary()
+
+print(f"\n✓ Training completed!")
 print(f"  Train score: {results['train_score']:.4f}")
 print(f"  Val score: {results['val_score']:.4f}")
 ```
