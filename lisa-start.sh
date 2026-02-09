@@ -507,6 +507,86 @@ echo "" >> "$PROGRESS_FILE"
 echo "Started: $(date)" >> "$PROGRESS_FILE"
 echo "" >> "$PROGRESS_FILE"
 
+# Hybrid Mode Detection (ML→Code)
+# If in ML mode and codebase detected, offer hybrid mode
+HYBRID_MODE_AVAILABLE=false
+if [[ "$MODE" == "ml" ]]; then
+    # Check for common code directories to detect if this is a codebase project
+    if [[ -d "$PROJECT_ROOT/src" ]] || \
+       [[ -d "$PROJECT_ROOT/app" ]] || \
+       [[ -f "$PROJECT_ROOT/main.py" ]] || \
+       [[ -f "$PROJECT_ROOT/app.py" ]] || \
+       [[ -f "$PROJECT_ROOT/index.js" ]] || \
+       [[ -f "$PROJECT_ROOT/server.js" ]] || \
+       [[ -f "$PROJECT_ROOT/package.json" ]]; then
+        HYBRID_MODE_AVAILABLE=true
+    fi
+fi
+
+if [[ "$HYBRID_MODE_AVAILABLE" == "true" ]]; then
+    echo ""
+    echo -e "${CYAN}╔════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║      Hybrid ML→Code Mode Available        ║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${YELLOW}📦 Codebase detected!${NC}"
+    echo ""
+    echo "I can run in ${BOLD}Hybrid Mode${NC} to automatically:"
+    echo "  1. Find the best ML model (ML mode)"
+    echo "  2. Integrate it into your codebase (Code mode)"
+    echo ""
+    echo "This creates a seamless ML→Code workflow with no manual steps."
+    echo ""
+    read -p "Use Hybrid ML→Code mode? [Y/n]: " use_hybrid
+    use_hybrid=${use_hybrid:-Y}
+
+    if [[ "$use_hybrid" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo -e "${CYAN}🔬 Configuring Hybrid Mode${NC}"
+        echo ""
+        echo "You need to specify iterations for each phase:"
+        echo ""
+
+        # Ask for ML iterations
+        echo "Phase 1 - ML Optimization:"
+        echo "  How many ML experiments to run?"
+        read -p "  ML iterations [20]: " ml_iterations
+        ml_iterations=${ml_iterations:-20}
+
+        echo ""
+
+        # Ask for Code iterations
+        echo "Phase 2 - Code Integration:"
+        echo "  How many coding iterations for implementation?"
+        read -p "  Code iterations [50]: " code_iterations
+        code_iterations=${code_iterations:-50}
+
+        echo ""
+        echo -e "${CYAN}═══════════════════════════════════════════${NC}"
+        echo -e "${BOLD}Hybrid Mode Summary:${NC}"
+        echo "  • ML Experiments: $ml_iterations"
+        echo "  • Code Iterations: $code_iterations"
+        echo "  • Total Phases: 4 (ML → Extract → PRD → Code)"
+        echo -e "${CYAN}═══════════════════════════════════════════${NC}"
+        echo ""
+        read -p "Press Enter to start hybrid mode..."
+
+        echo ""
+        echo -e "${CYAN}🚀 Starting Hybrid ML→Code Mode...${NC}"
+        echo ""
+
+        # Run hybrid mode
+        "$SCRIPT_DIR/scripts/lisa-hybrid.sh" \
+            --ml-iterations "$ml_iterations" \
+            --code-iterations "$code_iterations"
+
+        exit $?
+    else
+        echo ""
+        echo -e "${YELLOW}Continuing with standard ML mode...${NC}"
+    fi
+fi
+
 # Step 5: Ask how to run Lisa
 echo ""
 echo -e "${YELLOW}How should Lisa work?${NC}"

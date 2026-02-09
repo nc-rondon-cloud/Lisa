@@ -58,16 +58,41 @@ When you run `./lisa/lisa-start.sh --mode=code`:
 
 **Important**: Lisa works autonomously and makes technical decisions without asking. She uses existing codebase patterns and best practices to resolve any ambiguity.
 
-### ML Mode (Data Science) - NEW!
+### ML Mode (Data Science)
 When you run `./lisa/lisa-start.sh --mode=ml`:
 1. Lisa reads your PRD with ML objectives and data specifications
 2. Performs comprehensive exploratory data analysis (EDA)
 3. Designs and runs experiments autonomously
 4. Finds optimal hyperparameters via automated search
-5. Trains and evaluates models
+5. Trains and evaluates models (with progress bars and detailed logging)
 6. Generates visualizations and documentation
 7. Stops automatically when optimal results are achieved
 8. Documents everything in `lisas_diary/`
+
+### Hybrid ML→Code Mode - NEW!
+When Lisa detects an existing codebase in ML mode, she offers **Hybrid Mode** for automatic ML→Code integration:
+
+**Workflow:**
+1. **ML Phase**: Automatically finds the best ML model
+2. **Model Extraction**: Queries MLflow and creates `BEST_MODEL.json`
+3. **PRD Generation**: Analyzes your codebase and auto-generates implementation tasks
+4. **Code Integration**: Switches to Code mode and integrates the model
+
+**Benefits:**
+- Zero manual steps between ML experiments and code integration
+- Context-aware integration based on your actual codebase structure
+- Separate iteration limits for ML (experiments) and Code (implementation)
+- Complete traceability with MLflow run IDs
+
+**Example:**
+```bash
+./lisa/lisa-start.sh --mode=ml
+# Lisa detects codebase → offers Hybrid Mode
+# Specify: 30 ML iterations, 100 Code iterations
+# Result: Best model automatically integrated into your code
+```
+
+See [docs/HYBRID_MODE.md](docs/HYBRID_MODE.md) for complete documentation.
 
 ### Individual Scripts
 
@@ -86,6 +111,9 @@ When you run `./lisa/lisa-start.sh --mode=ml`:
 | `scripts/lisa-train.sh` | ML: Train model with monitoring |
 | `scripts/lisa-evaluate.sh` | ML: Evaluate trained models |
 | `scripts/lisa-visualize.sh` | ML: Generate visualizations |
+| `scripts/lisa-hybrid.sh` | Hybrid: ML→Code automatic integration flow |
+| `scripts/write-best-model-info.sh` | Hybrid: Extract best model from MLflow |
+| `scripts/generate-implementation-prd.sh` | Hybrid: Generate Code PRD from ML results |
 | `scripts/lisa-reset.sh` | Reset Lisa to clean state (clear all artifacts) |
 
 ### Examples
