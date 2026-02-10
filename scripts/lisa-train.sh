@@ -101,27 +101,34 @@ EOF
 # Execute training with Claude
 echo -e "${CYAN}Starting training...${NC}\n"
 
-echo -e "${DIM}Running Claude for model training...${NC}"
+echo -e "${DIM}Running Claude for model training (streaming output)...${NC}"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
 set +e
-result=$(claude --model "$LISA_MODEL" --dangerously-skip-permissions "$CONTEXT_PROMPT" 2>&1)
+# Stream output to console in real-time, but also capture last lines to a temp file
+TMP_OUTPUT=$(mktemp)
+claude --model "$LISA_MODEL" --dangerously-skip-permissions "$CONTEXT_PROMPT" 2>&1 | tee "$TMP_OUTPUT"
 exit_code=$?
 set -e
 
-# Log results
-result_length=${#result}
 echo ""
-echo -e "  Exit code: ${exit_code}, Output length: ${result_length} chars"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
 
 if [[ $exit_code -ne 0 ]]; then
     echo -e "${RED}❌ Claude exited with error code $exit_code${NC}"
-    echo -e "${DIM}First 500 chars of output:${NC}"
-    echo "${result:0:500}"
+    rm -f "$TMP_OUTPUT"
     exit 1
 fi
 
-# Check for completion in output first, then in diary files
+# Check for completion in output
+result=$(cat "$TMP_OUTPUT")
+rm -f "$TMP_OUTPUT"
+
 if [[ "$result" == *"TRAINING_COMPLETE:${EXPERIMENT_ID}"* ]] || [[ "$result" == *"<promise>TRAINING_COMPLETE:${EXPERIMENT_ID}"* ]]; then
-    echo -e "\n${GREEN}✓ Training completed (detected in output)${NC}"
+    echo -e "${GREEN}✓ Training completed (detected in output)${NC}"
 
     # Try to extract score from output
     if [[ "$result" =~ TRAINING_COMPLETE:${EXPERIMENT_ID}:([^:]+):([0-9.]+) ]]; then

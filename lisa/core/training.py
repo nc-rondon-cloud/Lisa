@@ -225,6 +225,7 @@ class ModelTrainer:
                     self.model.fit(
                         X_train, y_train,
                         eval_set=[(X_train, y_train), (X_val, y_val)],
+                        callbacks=custom_callbacks,
                         verbose=False
                     )
 
