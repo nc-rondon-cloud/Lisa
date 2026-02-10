@@ -98,6 +98,16 @@ from lisa.mlflow_manager import MLflowManager
 mlflow_mgr = MLflowManager()
 previous_runs = mlflow_mgr.get_all_runs()
 
+# Count unique experiment IDs (each experiment may have multiple runs)
+unique_experiment_ids = set()
+for run in previous_runs:
+    exp_id = run.data.params.get('experiment_id')
+    if exp_id and exp_id.startswith('exp_'):
+        unique_experiment_ids.add(exp_id)
+
+num_experiments = len(unique_experiment_ids)
+print(f"Previous experiments: {num_experiments}")
+
 # Analyze what's been tried
 for run in previous_runs:
     print(f"Run: {run.info.run_name}")
@@ -124,7 +134,7 @@ if best_run:
 
 Choose strategy based on current situation:
 
-**Situation 1: First Experiment (No previous runs)**
+**Situation 1: First Experiment (No previous experiments)**
 → **Strategy**: Create intelligent baseline
 - **You have full freedom** to choose ANY model that makes sense
 - Consider problem characteristics from EDA
@@ -132,7 +142,7 @@ Choose strategy based on current situation:
 - **Don't limit yourself**: Try neural networks, gradient boosting, SVMs, ensembles, or ANY approach you think will work
 - Focus on establishing a meaningful performance floor
 
-**Situation 2: Early Experiments (1-3 runs, large gap to goal)**
+**Situation 2: Early Experiments (1-3 experiments, large gap to goal)**
 → **Strategy**: Creative exploration
 - **Think outside the box**: Don't just try "standard" models
 - Consider unconventional approaches that match the data characteristics
@@ -140,14 +150,14 @@ Choose strategy based on current situation:
 - **Freedom to innovate**: Use ANY sklearn, xgboost, lightgbm, catboost, neural networks, or custom approaches
 - Compare fundamentally different approaches (ensemble vs single model, tree-based vs distance-based, etc.)
 
-**Situation 3: Found promising model (4-10 runs, improving)**
+**Situation 3: Found promising model (4-10 experiments, improving)**
 → **Strategy**: Intelligent optimization
 - **You decide**: Tune the promising model OR try a completely different approach if you think it's better
 - Don't be constrained by previous choices
 - Consider hybrid approaches, stacking, or novel architectures
 - Use advanced optimization: Bayesian, genetic algorithms, or whatever fits best
 
-**Situation 4: Plateau (10+ runs, no improvement in 5)**
+**Situation 4: Plateau (10+ experiments, no improvement in 5)**
 → **Strategy**: Break free and innovate
 - **Time to think differently**: Previous approach hit a ceiling
 - Radically change strategy: new model families, feature engineering, data augmentation
@@ -285,8 +295,13 @@ def choose_model_intelligently(problem_type, eda_insights, previous_results, dat
 Create detailed experiment plan:
 
 ```python
+# Generate next experiment ID based on unique experiments, not total runs
+# (each experiment may create multiple MLflow runs)
+next_exp_number = num_experiments + 1
+experiment_id = f"exp_{next_exp_number:03d}"
+
 experiment_plan = {
-    'experiment_id': f"exp_{len(previous_runs) + 1:03d}",
+    'experiment_id': experiment_id,
     'strategy': 'baseline|exploration|optimization|fine_tuning',
     'model_type': 'random_forest|xgboost|etc',
     'reasoning': 'Why this model and why now',
@@ -380,7 +395,7 @@ print(f"Experiment config saved: {config_path}")
 
 ### Example 1: First Experiment (Creative Baseline)
 ```
-Previous runs: 0
+Previous experiments: 0
 Best score: N/A
 Target: 0.90
 Data: 50K samples, 100 features, imbalanced classes (80/20)
@@ -396,7 +411,7 @@ Alternative considered: LightGBM + SMOTE (decided against due to computational c
 
 ### Example 2: Third Experiment (Bold Exploration)
 ```
-Previous runs: 2 (CatBoost: 0.84, LightGBM: 0.82)
+Previous experiments: 2 (CatBoost: 0.84, LightGBM: 0.82)
 Best score: 0.84
 Target: 0.90
 Gap: 0.06
@@ -413,7 +428,7 @@ Risk: Overfitting (will monitor with careful CV)
 
 ### Example 3: Tenth Experiment (Innovation)
 ```
-Previous runs: 9 (best: Stacking 0.88, plateau for 3 runs)
+Previous experiments: 9 (best: Stacking 0.88, plateau for 3 runs)
 Best score: 0.88
 Target: 0.90
 Gap: 0.02
@@ -431,7 +446,7 @@ Fallback: If fails, try AutoML (H2O or AutoGluon) to explore space automatically
 
 ### Example 4: Creative Feature Engineering
 ```
-Previous runs: 15 (best: TabNet 0.89, very close!)
+Previous experiments: 15 (best: TabNet 0.89, very close!)
 Best score: 0.89
 Target: 0.90
 Gap: 0.01
