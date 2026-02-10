@@ -145,7 +145,10 @@ if [[ -f "$ML_CONFIG" ]]; then
             echo -e "\n${GREEN}🎉 Stopping criteria met - experimentation complete!${NC}"
             echo "ML Mode completed successfully at $(date)" >> "$AFK_LOG"
             echo -e "\n${CYAN}Check lisas_diary/ for final analysis and lisas_laboratory/ for results${NC}"
-            exit 0
+
+            # Return exit code 10 to indicate target was achieved
+            # This is important for hybrid mode to know the reason for stopping
+            exit 10
         elif [[ $EXPERIMENT_EXIT_CODE -eq 11 ]]; then
             # Strategy change recommended - continue with adjusted approach
             echo -e "\n${YELLOW}⚠ Strategy change detected - will adjust approach${NC}"

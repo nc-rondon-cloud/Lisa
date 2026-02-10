@@ -192,27 +192,53 @@ if [[ "$SKIP_ML" == "false" ]]; then
     ML_EXIT_CODE=$?
 
     echo ""
-    lisa_info "ML Mode completed with exit code: $ML_EXIT_CODE"
+    echo -e "${CYAN}═══════════════════════════════════════${NC}"
+    echo -e "${BOLD}ML Mode Exit Code: $ML_EXIT_CODE${NC}"
+    echo -e "${CYAN}═══════════════════════════════════════${NC}"
+    echo ""
 
     # Check ML results
     if [[ $ML_EXIT_CODE -eq 10 ]]; then
-        echo ""
         echo -e "${GREEN}${BOLD}✓ ML Phase Complete - Target metric achieved!${NC}"
+        echo -e "${DIM}Proceeding to model extraction and code integration...${NC}"
         echo ""
     elif [[ $ML_EXIT_CODE -eq 0 ]]; then
-        echo ""
         echo -e "${YELLOW}⚠ ML Phase Complete - Max iterations reached${NC}"
-        echo "Proceeding with best model found so far..."
+        echo -e "${DIM}Proceeding with best model found so far...${NC}"
         echo ""
     else
+        echo -e "${RED}✗ ML Phase Error (exit code: $ML_EXIT_CODE)${NC}"
         echo ""
-        echo -e "${RED}✗ ML Phase Failed (exit code: $ML_EXIT_CODE)${NC}"
+
+        # Provide specific guidance based on exit code
+        if [[ $ML_EXIT_CODE -eq 1 ]]; then
+            echo "Common causes for exit code 1:"
+            echo "  • Missing PRD file ($LISA_DIR/PRD.md)"
+            echo "  • Missing prompt files"
+            echo "  • Experiment execution failure"
+            echo "  • Data loading error"
+        elif [[ $ML_EXIT_CODE -eq 11 ]]; then
+            echo "Exit code 11: Strategy change recommended"
+            echo "This is not fatal - continuing..."
+            ML_EXIT_CODE=0  # Treat as success
+        else
+            echo "Unexpected exit code: $ML_EXIT_CODE"
+        fi
+
         echo ""
-        echo "Check logs for errors:"
-        echo "  • ML logs: $LISA_DIR/logs/"
+        echo "Check for details:"
         echo "  • Diary: $LISA_DIR/lisas_diary/"
+        echo "  • Config: $ML_CONFIG"
         echo ""
-        exit $ML_EXIT_CODE
+
+        # For exit code 1, abort immediately (critical failure)
+        if [[ $ML_EXIT_CODE -eq 1 ]]; then
+            echo -e "${RED}Critical error - cannot continue${NC}"
+            exit $ML_EXIT_CODE
+        fi
+
+        echo -e "${YELLOW}Attempting to continue with existing results...${NC}"
+        echo ""
     fi
 else
     echo ""
